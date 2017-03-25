@@ -4,7 +4,7 @@
 /* world_t holds general information about the game */
 typedef struct {
     map_t* map; /* Pointer to a 2D array */
-    int turns;
+    int turns;  /* -1 for no turns */
 } world_t;
 
 world_t* newWorld();
@@ -12,16 +12,16 @@ void destroyWorld(world_t* w);
 
 /* map_t is the worldmap */
 typedef struct {
-    int width;
-    int height;
-    int* cells;
+    unsigned int width;
+    unsigned int height;
+    char* cells;
 } map_t;
 
 /* game_t is the current state of the game (as it progresses) */
 typedef struct {
     player_t* localPlayer;
     
-    int playerCount;
+    unsigned int playerCount;
     player_t* players;
 } game_t;
 
@@ -37,8 +37,8 @@ typedef struct {
 
 /* vec2_t is a cartesian coordinate */
 typedef struct {
-    int x;
-    int y;
+    unsigned int x;
+    unsigned int y;
 } vec2_t;
 
 /* ant_t is an ant */
