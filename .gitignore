@@ -33,4 +33,4 @@
 *.su
 
 # Binaries
-bin/*
+bin/*.bot
