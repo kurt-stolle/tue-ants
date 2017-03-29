@@ -4,7 +4,13 @@
 /* world_t holds general information about the game */
 typedef struct {
     map_t* map; /* Pointer to a 2D array */
-    int turns;  /* -1 for no turns */
+    unsigned int turns;  /* -1 for no turns */
+    unsigned int viewRadius;
+    unsigned int attackRadius;
+    unsigned int spawnRadius;
+    unsigned int playerSeed;
+    unsigned int loadTime;
+    unsigned int turnTime;
 } world_t;
 
 world_t* newWorld();
@@ -14,8 +20,21 @@ void destroyWorld(world_t* w);
 typedef struct {
     unsigned int width;
     unsigned int height;
-    char* cells;
+    cell_t*** cells;
 } map_t;
+
+map_t newMap();
+void destroyMap(map_t* m);
+
+/* cell_t is a cell */
+typedef struct {
+    char state;
+    unsigned int lastSeen;
+} cell_t;
+
+cell_t newCell(); // TODO
+bool isCellVisible(cell_t* c, world_t* w); // TODO
+void destroyCell(cell_t* c); // TODO
 
 /* game_t is the current state of the game (as it progresses) */
 typedef struct {

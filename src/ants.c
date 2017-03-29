@@ -4,16 +4,39 @@
 #include "ants.h"
 
 /* World methods */
-world_t* newWorld(unsigned int w, unsigned int h) {    
+world_t* newWorld() {    
     unsigned int i;
     
     /* Allocate world */
     world_t* w = malloc(sizeof *w);
 
     /* Default values */
-    w.turns = -1;
+    w.turns = 0;
+    w.viewRadius = 0;
+    w.attackRadius = 0;
+    w.spawnRadius = 0;
+    w.playerSeed = 0;
+    w.loadTime = 0;
+    w.turnTime = 0;
 
-    /* Initialize the map */
+    w.map = NULL;
+
+    /* Return world pointer */
+    return w;
+}
+
+void destroyWorld(world_t* w){
+    /* Destroy map */
+    if (w.Map != NULL){
+        destroyMap(w.map);
+    }
+
+    /* Deallocate world */
+    free(w);
+}
+
+/* Map methods */
+map_t* newMap(unsigned int w, unsigned int h) {
     map_t* map = malloc(sizeof *w.map);
     map.width = w;
     map.height = h;
@@ -22,27 +45,28 @@ world_t* newWorld(unsigned int w, unsigned int h) {
     for(i=0; i < h; i++){
         map.cells[i] = calloc(0, h * sizeof(*w.map.cells[i]));
     }
-
-    w.map = map;
-
-    /* Return world pointer */
-    return w;
 }
 
-void destroyWorld(world_t* w){
+void destroyMap(map_t* m){
     unsigned int i;
 
     /* Deallocate cells */
-    for(i=0; i < w.map.height; i++){
-        free(w.map.cells[i]);
+    for(i=0; i < m.height; i++){
+        free(m.cells[i]);
     }
-    free(w.map.cells); 
+    free(m.cells); 
+    free(m);
+}
 
-    /* Deallocate map */
-    free(w.map);
+/* Cell methods */
+cell_t newCell(){
 
-    /* Deallocate world */
-    free(w);
+}
+bool isCellVisible(cell_t* c, world_t* w){
+    
+}
+void destroyCell(cell_t* c){
+    
 }
 
 /* Game methods */
