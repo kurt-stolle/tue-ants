@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include "ants.h"
 
 /* Constants */
@@ -64,14 +65,19 @@ inline long strToInt(const char* str) {
 }
 
 /* Initialization function */
-bool init(world_t* w) {
+int init(world_t* w) {
     /* Logic variables */
     int i;
     char *line;
     size_t len;
+    command_t split;
+    char* cmd;
+    char** args;
+    size_t argsLen;
 
     /* Data */
     unsigned int width, height;
+    unsigned int readvar;
 
     fprintf(stderr, "Starting initialization\n");
 
@@ -83,45 +89,50 @@ bool init(world_t* w) {
         }
 
         /* Fetch the command */
-        command_t* split = splitCommand(line,&split)
-        char* cmd = split->cmd;
-        char** args = split->args;
-        size_t argsLen = split->argsLen;
+        split = splitCommand(line,&split);
+        cmd = split->cmd;
+        args = split->args;
+        argsLen = split->argsLen;
+
+        /* Every command uses the first argument as an int */
+        readvar = (unsigned int) strToInt(args[0]);
 
         /* Switch by command */
         if (strEqual(cmd, "ready")){
-            break
+            break;
         } else if (strEqual(cmd, "rows" && argsLen == 1)){
-            height = (unsigned int) strToInt(args[0]);
-            fprintf(stderr, "- map height: %d\n", args[0]);
+            height = readvar;
+            fprintf(stderr, "- map height: %d\n", readvar);
         } else if (strEqual(cmd, "cols" && argsLen == 1)){
-            width = (unsigned int) strToInt(args[0]);
-            fprintf(stderr, "- map width: %d\n", args[0]);
+            width = readvar;
+            fprintf(stderr, "- map width: %d\n", readvar);
         } else if (strEqual(cmd, "turns" && argsLen == 1)){
-            w->turns = (unsigned int) strToInt(args[0]);
-            fprintf(stderr, "- turns: %d\n", args[0]);
+            w->turns = readvar;
+            fprintf(stderr, "- turns: %d\n", readvar);
         } else if (strEqual(cmd, "viewradius2" && argsLen == 1)){
-            w->viewRadius = (unsigned int) strToInt(args[0]);
-            fprintf(stderr, "- view radius: %d\n", args[0]);
+            w->viewRadius = readvar;
+            fprintf(stderr, "- view radius: %d\n", readvar);
         } else if (strEqual(cmd, "attackradius2" && argsLen == 1)){
-            w->attackRadius = (unsigned int) strToInt(args[0]);
-            fprintf(stderr, "- attack radius: %d\n", args[0]);
+            w->attackRadius = readvar;
+            fprintf(stderr, "- attack radius: %d\n", readvar);
         } else if (strEqual(cmd, "spawnradius2" && argsLen == 1)){
-            w->spawnRadius = (unsigned int) strToInt(args[0]);
-            fprintf(stderr, "- spawn radius: %d\n", args[0]);
+            w->spawnRadius = readvar;
+            fprintf(stderr, "- spawn radius: %d\n", readvar);
         } else if (strEqual(cmd, "player_seed" && argsLen == 1)){
-            w->playerSeed = (unsigned int) strToInt(args[0]);
-            fprintf(stderr, "- player seed: %d\n", args[0]);
+            w->playerSeed = readvar;
+            fprintf(stderr, "- player seed: %d\n", readvar);
         } else if (strEqual(cmd, "loadtime" && argsLen == 1)){
-            w->loadTime = (unsigned int) strToInt(args[0]);
-            fprintf(stderr, "- load time: %d\n", args[0]);
+            w->loadTime = readvar;
+            fprintf(stderr, "- load time: %d\n", readvar);
         } else if (strEqual(cmd, "turntime" && argsLen == 1)){         
-            w->urnTime = (unsigned int) strToInt(args[0]);
-            fprintf(stderr, "- turn time: %d\n", args[0]);
+            w->turnTime = readvar;
+            fprintf(stderr, "- turn time: %d\n", readvar);
         } else {
             fprintf(stderr, "Unknown command: %s\n", cmd);
             continue; /* Unknown command */
         }
+
+        destroyCommand(split);
     }
 
     /* Set remaining values */
@@ -129,9 +140,6 @@ bool init(world_t* w) {
 
     /* Dealloc */
     free(line);
-    free(saveptr);
-    free(token);
-    free(split);
 
     printf("go\n");
     fflush(stdout);

@@ -1,6 +1,8 @@
 #ifndef ANTS_H
 #define ANTS_H
 
+#include <stdbool.h>
+
 /* world_t holds general information about the game */
 typedef struct {
     map_t* map; /* Pointer to a 2D array */
