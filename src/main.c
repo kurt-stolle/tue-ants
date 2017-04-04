@@ -8,9 +8,19 @@
 const char delim[] = " \n"
 
 /* Command splitting utility. Returns the amount of arguments found (incl the actual command) */
-int splitCommand(char* cmd, char*** arr){
+typedef struct{
+    char* cmd       /* the actual command */
+    char** args     /* args array */
+    size_t argsLen  /* length of the args array */
+} command_t;
+
+command_t* readCommand(char* cmd){
+    /* Allocate memory for the result */
+    command_t* res = malloc(sizeof(*res));
+    res->argsLen = 0;
+
+    /* Read using strtok */
     char* token;
-    size_t size = 0;
     for (;;){
         token = strtok_r(cmd, delim, &cmd);
 
@@ -19,25 +29,29 @@ int splitCommand(char* cmd, char*** arr){
             break;
         }
 
-        /* Increase the size of the array */
-        size++;
-        if (size == 1){
-            *arr = malloc(size * sizeof(**arr));
-        } else {
-            *arr = realloc(*arr, size * sizeof(**arr));
-        }
+        if (!(res->cmd)){
+            cmd=token;
+        else {
+            res->argsLen++;
 
-        /* Store the location of the token in the array */
-        *arr[size-1] = token;                
+            /* Allocate memory to store the argument */
+            if (res->argsLen == 1){
+                res->args = malloc(res->argsLen * sizeof(*(res->args)));
+            } else {
+                res->args = realloc(res->args, res->argsLen * sizeof(*(res->args));
+            }
+
+            /* Store the location of the token in the array */
+            res->args[res->argsLen-1] = token;
+        }               
     }
 
-    /* Handle the case where strtok doesn't return anything */
-    if (size == 0){
-        *arr = malloc(size * sizeof(**arr));
-        *arr[size-1] = cmd;
-    }
+    return res;
+}
 
-    return size;
+void destroyCommand(command_t* c){
+    free(c->args);
+    free(c);
 }
 
 /* Macro functions, so that the library functions can easily be replaced */
@@ -51,64 +65,77 @@ inline long strToInt(const char* str) {
 
 /* Initialization function */
 bool init(world_t* w) {
-    // Logic variables
+    /* Logic variables */
+    int i;
     char *line;
     size_t len;
-    char *saveptr;
-    char *token;
-    char** split;
 
-    // Data received
+    /* Data */
     unsigned int width, height;
 
-    while(getline(&line, &linelength, stdin) != 0) {
+    fprintf(stderr, "Starting initialization\n");
+
+    /* Keep reading lines */
+    while(getline(&line, &len, stdin) != 0) {
         /* Skip empty lines */
         if (strcmp(line, "\n") == 0) {
             continue;
         }
 
         /* Fetch the command */
-        int args = splitCommand(line,&split)
+        command_t* split = splitCommand(line,&split)
+        char* cmd = split->cmd;
+        char** args = split->args;
+        size_t argsLen = split->argsLen;
 
-        if (args <= 0){ 
-            free(line); /* Something went wrong */
-            return false; 
-        }
-
-        // Switch by command (first arg)
-        const char* cmd = split[0];
+        /* Switch by command */
         if (strEqual(cmd, "ready")){
-            break; // Initialization is done
-        } else if (strEqual(cmd, "rows" && args == 2)){
-            height = (unsigned int) strToInt(split[1]);
-        } else if (strEqual(cmd, "cols" && args == 2)){
-            width = (unsigned int) strToInt(split[1]);
-        } else if (strEqual(cmd, "turns" && args == 2)){
-            w.turns = (unsigned int) strToInt(split[1]);
-        } else if (strEqual(cmd, "viewradius2" && args == 2)){
-            w.viewRadius = (unsigned int) strToInt(split[1]);
-        } else if (strEqual(cmd, "attackradius2" && args == 2)){
-            w.attackRadius = (unsigned int) strToInt(split[1]);
-        } else if (strEqual(cmd, "spawnradius2" && args == 2)){
-            w.spawnRadius = (unsigned int) strToInt(split[1]);
-        } else if (strEqual(cmd, "player_seed" && args == 2)){
-            w.playerSeed = (unsigned int) strToInt(split[1]);
-        } else if (strEqual(cmd, "loadtime" && args == 2)){
-            w.loadTime = (unsigned int) strToInt(split[1]);
-        } else if (strEqual(cmd, "turntime" && args == 2)){         
-            w.turnTime = (unsigned int) strToInt(split[1]);
-        } else if (strEqual(cmd, "player_seed" && args == 2)){         
-            w.turnTime = (unsigned int) strToInt(split[1]);
+            break
+        } else if (strEqual(cmd, "rows" && argsLen == 1)){
+            height = (unsigned int) strToInt(args[0]);
+            fprintf(stderr, "- map height: %d\n", args[0]);
+        } else if (strEqual(cmd, "cols" && argsLen == 1)){
+            width = (unsigned int) strToInt(args[0]);
+            fprintf(stderr, "- map width: %d\n", args[0]);
+        } else if (strEqual(cmd, "turns" && argsLen == 1)){
+            w->turns = (unsigned int) strToInt(args[0]);
+            fprintf(stderr, "- turns: %d\n", args[0]);
+        } else if (strEqual(cmd, "viewradius2" && argsLen == 1)){
+            w->viewRadius = (unsigned int) strToInt(args[0]);
+            fprintf(stderr, "- view radius: %d\n", args[0]);
+        } else if (strEqual(cmd, "attackradius2" && argsLen == 1)){
+            w->attackRadius = (unsigned int) strToInt(args[0]);
+            fprintf(stderr, "- attack radius: %d\n", args[0]);
+        } else if (strEqual(cmd, "spawnradius2" && argsLen == 1)){
+            w->spawnRadius = (unsigned int) strToInt(args[0]);
+            fprintf(stderr, "- spawn radius: %d\n", args[0]);
+        } else if (strEqual(cmd, "player_seed" && argsLen == 1)){
+            w->playerSeed = (unsigned int) strToInt(args[0]);
+            fprintf(stderr, "- player seed: %d\n", args[0]);
+        } else if (strEqual(cmd, "loadtime" && argsLen == 1)){
+            w->loadTime = (unsigned int) strToInt(args[0]);
+            fprintf(stderr, "- load time: %d\n", args[0]);
+        } else if (strEqual(cmd, "turntime" && argsLen == 1)){         
+            w->urnTime = (unsigned int) strToInt(args[0]);
+            fprintf(stderr, "- turn time: %d\n", args[0]);
         } else {
-            continue; // Unknown command;
+            fprintf(stderr, "Unknown command: %s\n", cmd);
+            continue; /* Unknown command */
         }
     }
 
     /* Set remaining values */
-    w.map = newMap(width, height);
+    w->map = newMap(width, height);
 
-    /* Dealloc line */
+    /* Dealloc */
     free(line);
+    free(saveptr);
+    free(token);
+    free(split);
+
+    printf("go\n");
+    fflush(stdout);
+    fprintf(stderr, "Finished initialization\n");
 
     return true;
 }

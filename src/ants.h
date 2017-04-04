@@ -4,7 +4,7 @@
 /* world_t holds general information about the game */
 typedef struct {
     map_t* map; /* Pointer to a 2D array */
-    unsigned int turns;  /* -1 for no turns */
+    unsigned int turns;
     unsigned int viewRadius;
     unsigned int attackRadius;
     unsigned int spawnRadius;
