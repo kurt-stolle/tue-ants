@@ -1,178 +1,248 @@
-/* This file contains the program's main method, i.e. the starting point of the program */
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
+// This file contains the program's main method, i.e. the starting point of the
+// program
 #include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "ants.h"
 
-/* Constants */
-const char delim[] = " \n"
+// Constants
+const char delim[] = " \n";
 
-/* Command splitting utility. Returns the amount of arguments found (incl the actual command) */
-typedef struct{
-    char* cmd       /* the actual command */
-    char** args     /* args array */
-    size_t argsLen  /* length of the args array */
+// Command splitting
+typedef struct {
+  char *cmd;       // the actual command
+  char **args;     // args array
+  size_t argsLen;  // length of the args array
 } command_t;
 
-command_t* readCommand(char* cmd){
-    /* Allocate memory for the result */
-    command_t* res = malloc(sizeof(*res));
-    res->argsLen = 0;
+command_t *readCommand(char *cmd) {
+  command_t *res;
 
-    /* Read using strtok */
-    char* token;
-    for (;;){
-        token = strtok_r(cmd, delim, &cmd);
+  // Allocate memory for the result
+  res = malloc(sizeof(*res));
+  res->argsLen = 0;
+  res->cmd = NULL;
+  res->args = NULL;
 
-        /* If the token equals null, then there is nothing more to read */
-        if( token == NULL) {
-            break;
-        }
+  // Read using strtok
+  char *token;
+  for (;;) {
+    token = strtok_r(cmd, delim, &cmd);
 
-        if (!(res->cmd)){
-            cmd=token;
-        else {
-            res->argsLen++;
-
-            /* Allocate memory to store the argument */
-            if (res->argsLen == 1){
-                res->args = malloc(res->argsLen * sizeof(*(res->args)));
-            } else {
-                res->args = realloc(res->args, res->argsLen * sizeof(*(res->args));
-            }
-
-            /* Store the location of the token in the array */
-            res->args[res->argsLen-1] = token;
-        }               
+    // If the token equals null, then there is nothing more to read
+    if (token == NULL) {
+      break;
     }
 
-    return res;
+    if (!(res->cmd)) {
+      res->cmd = token;
+    } else {
+      res->argsLen++;
+
+      // Allocate memory to store the argument
+      if (res->argsLen == 1) {
+        res->args = malloc(res->argsLen * sizeof(*(res->args)));
+      } else {
+        res->args = realloc(res->args, res->argsLen * sizeof(*(res->args)));
+      }
+
+      // Store the location of the token in the array
+      res->args[res->argsLen - 1] = token;
+    }
+  }
+
+  return res;
 }
 
-void destroyCommand(command_t* c){
-    free(c->args);
-    free(c);
+void destroyCommand(command_t *c) {
+  free(c->args);
+  free(c);
 }
 
-/* Macro functions, so that the library functions can easily be replaced */
-inline bool strEqual(const char* a, const char* b){
-    return strcmp(a,b) == 0;
-}
+// Helper functions for string comparison functions, so that the std library
+// functions can easily be replaced if Computation II decides we can't
+// use them again
+inline bool strEqual(const char *a, const char *b) { return strcmp(a, b) == 0; }
 
-inline long strToInt(const char* str) {
-    return strtol(str,NULL,10);
-}
+inline long strToInt(const char *str) { return strtol(str, NULL, 10); }
 
-/* Initialization function */
-int init(world_t* w) {
-    /* Logic variables */
-    int i;
-    char *line;
-    size_t len;
-    command_t split;
-    char* cmd;
-    char** args;
-    size_t argsLen;
+// Initialization function
+int init(world_t *w) {
+  char *line = NULL;
+  size_t len = 0;
+  command_t *split;
+  unsigned int width = 1;
+  unsigned int height = 1;
+  unsigned int readvar;
 
-    /* Data */
-    unsigned int width, height;
-    unsigned int readvar;
+  fprintf(stderr, "Starting initialization\n");
 
-    fprintf(stderr, "Starting initialization\n");
-
-    /* Keep reading lines */
-    while(getline(&line, &len, stdin) != 0) {
-        /* Skip empty lines */
-        if (strcmp(line, "\n") == 0) {
-            continue;
-        }
-
-        /* Fetch the command */
-        split = splitCommand(line,&split);
-        cmd = split->cmd;
-        args = split->args;
-        argsLen = split->argsLen;
-
-        /* Every command uses the first argument as an int */
-        readvar = (unsigned int) strToInt(args[0]);
-
-        /* Switch by command */
-        if (strEqual(cmd, "ready")){
-            break;
-        } else if (strEqual(cmd, "rows" && argsLen == 1)){
-            height = readvar;
-            fprintf(stderr, "- map height: %d\n", readvar);
-        } else if (strEqual(cmd, "cols" && argsLen == 1)){
-            width = readvar;
-            fprintf(stderr, "- map width: %d\n", readvar);
-        } else if (strEqual(cmd, "turns" && argsLen == 1)){
-            w->turns = readvar;
-            fprintf(stderr, "- turns: %d\n", readvar);
-        } else if (strEqual(cmd, "viewradius2" && argsLen == 1)){
-            w->viewRadius = readvar;
-            fprintf(stderr, "- view radius: %d\n", readvar);
-        } else if (strEqual(cmd, "attackradius2" && argsLen == 1)){
-            w->attackRadius = readvar;
-            fprintf(stderr, "- attack radius: %d\n", readvar);
-        } else if (strEqual(cmd, "spawnradius2" && argsLen == 1)){
-            w->spawnRadius = readvar;
-            fprintf(stderr, "- spawn radius: %d\n", readvar);
-        } else if (strEqual(cmd, "player_seed" && argsLen == 1)){
-            w->playerSeed = readvar;
-            fprintf(stderr, "- player seed: %d\n", readvar);
-        } else if (strEqual(cmd, "loadtime" && argsLen == 1)){
-            w->loadTime = readvar;
-            fprintf(stderr, "- load time: %d\n", readvar);
-        } else if (strEqual(cmd, "turntime" && argsLen == 1)){         
-            w->turnTime = readvar;
-            fprintf(stderr, "- turn time: %d\n", readvar);
-        } else {
-            fprintf(stderr, "Unknown command: %s\n", cmd);
-            continue; /* Unknown command */
-        }
-
-        destroyCommand(split);
+  // Keep reading lines
+  while (getline(&line, &len, stdin) != 0) {
+    // Skip empty lines
+    if (strEqual(line, "\n")) {
+      continue;
     }
 
-    /* Set remaining values */
-    w->map = newMap(width, height);
+    // Fetch the command
+    split = readCommand(line);
 
-    /* Dealloc */
-    free(line);
+    // Switch by command
+    if (strEqual(split->cmd, "ready")) {
+      break;
+    } else if (strEqual(split->cmd, "rows") && split->argsLen == 1) {
+      readvar = (unsigned int)strToInt(split->args[0]);
+      height = readvar;
 
-    printf("go\n");
-    fflush(stdout);
-    fprintf(stderr, "Finished initialization\n");
+      fprintf(stderr, "- map height: %d\n", readvar);
+    } else if (strEqual(split->cmd, "cols") && split->argsLen == 1) {
+      readvar = (unsigned int)strToInt(split->args[0]);
+      width = readvar;
 
-    return true;
-}
+      fprintf(stderr, "- map width: %d\n", readvar);
+    } else if (strEqual(split->cmd, "turns") && split->argsLen == 1) {
+      readvar = (unsigned int)strToInt(split->args[0]);
+      w->turns = readvar;
 
-/* Play function. Plays the ants game */
-bool play(world_t* w, game_t* g) {
+      fprintf(stderr, "- turns: %d\n", readvar);
+    } else if (strEqual(split->cmd, "viewradius2") && split->argsLen == 1) {
+      readvar = (unsigned int)strToInt(split->args[0]);
+      w->viewRadius = readvar;
 
+      fprintf(stderr, "- view radius: %d\n", readvar);
+    } else if (strEqual(split->cmd, "attackradius2") && split->argsLen == 1) {
+      readvar = (unsigned int)strToInt(split->args[0]);
+      w->attackRadius = readvar;
 
-    return true;
-}
+      fprintf(stderr, "- attack radius: %d\n", readvar);
+    } else if (strEqual(split->cmd, "spawnradius2") && split->argsLen == 1) {
+      readvar = (unsigned int)strToInt(split->args[0]);
+      w->spawnRadius = readvar;
 
-/* Main function. Returns 0 if there was no error */
-int main(){
-    int exitCode = 0;
+      fprintf(stderr, "- spawn radius: %d\n", readvar);
+    } else if (strEqual(split->cmd, "player_seed") && split->argsLen == 1) {
+      readvar = (unsigned int)strToInt(split->args[0]);
+      w->playerSeed = readvar;
 
-    /* World and game */
-    world_t* world = newWorld();
-    game_t* game = newGame();
+      fprintf(stderr, "- player seed: %d\n", readvar);
+    } else if (strEqual(split->cmd, "loadtime") && split->argsLen == 1) {
+      readvar = (unsigned int)strToInt(split->args[0]);
+      w->loadTime = readvar;
 
-    /* Initialize and play */
-    if (!init(world)){
-        exitCode = 3;
-    } else if (!play(world,game)){
-        exitCode = 4;
+      fprintf(stderr, "- load time: %d\n", readvar);
+    } else if (strEqual(split->cmd, "turntime") && split->argsLen == 1) {
+      readvar = (unsigned int)strToInt(split->args[0]);
+      w->turnTime = readvar;
+
+      fprintf(stderr, "- turn time: %d\n", readvar);
+    } else {
+      fprintf(stderr, "Unknown command: '%s'\n", split->cmd);
     }
 
-    /* Deallocate memory */
-    destroyWorld(world);
-    destroyGame(game);
+    // Dealloc
+    destroyCommand(split);
+  }
 
-    return exitCode;
+  // Set remaining values
+  fprintf(stderr, "Allocating map");
+  w->map = newMap(width, height);
+
+  // Dealloc line
+  free(line);
+
+  // Send 'go' to stdout and flush
+  printf("go\n");
+  fflush(stdout);
+
+  // Debug print
+  fprintf(stderr, "Finished initialization\n");
+  printMap(w->map, stderr);
+
+  return true;
+}
+
+// Play function. Plays the ants game
+bool play(world_t *w, game_t *g) {
+  bool end = false;
+  char *line = NULL;
+  size_t len = 0;
+  command_t *split;
+  vec2_t pos;
+
+  // Read information
+  while (getline(&line, &len, stdin) != 0) {
+    // Skip empty lines
+    if (strEqual(line, "\n")) {
+      continue;
+    }
+
+    // Fetch the command
+    split = readCommand(line);
+
+    // Switch by command
+    if (strEqual(split->cmd, "go")) {
+      // Go, end of info
+      break;
+    } else if (strEqual(split->cmd, "end")) {
+      // End game
+      end = true;
+    } else if (strEqual(split->cmd, "turn") && split->argsLen == 1) {
+      // Current turn
+      w->turns = strToInt(split->args[0]);
+    } else if (strEqual(split->cmd, "f") && split->argsLen == 2) {
+      // Food at (x,y)
+      pos.x = strToInt(split->args[0]);
+      pos.y = strToInt(split->args[1]);
+    } else if (strEqual(split->cmd, "w") && split->argsLen == 2) {
+      // Water at(x,y)
+      pos.x = strToInt(split->args[0]);
+      pos.y = strToInt(split->args[1]);
+    } else if (strEqual(split->cmd, "a") && split->argsLen == 3) {
+      // Ant at(x,y) owned by (owner)
+      pos.x = strToInt(split->args[0]);
+      pos.y = strToInt(split->args[1]);
+    } else if (strEqual(split->cmd, "h") && split->argsLen == 3) {
+      // Anthill at (x,y) owned by (owner OR 0)
+      pos.x = strToInt(split->args[0]);
+      pos.y = strToInt(split->args[1]);
+    } else {
+      fprintf(stderr, "Unknown command: '%s'\n", split->cmd);
+    }
+
+    // Dealloc
+    destroyCommand(split);
+  }
+
+  // Perform our own turn
+  if (!end) {
+  }
+
+  // Dealloc
+  free(line);
+
+  return !end;
+}
+
+// Main function. Returns 0 if there was no error
+int main() {
+  // World and game
+  world_t *world = newWorld();
+  game_t *game = newGame();
+
+  // Initialize and play
+  if (init(world)) {
+    while (play(world, game)) {
+      // Debug print
+      fprintf(stderr, "Finished turn, %d turns passed\n", world->turns);
+      printMap(world->map, stderr);
+    };
+  }
+
+  // Deallocate memory
+  destroyWorld(world);
+  destroyGame(game);
+
+  // We don't have any special exit codes
+  return 0;
 }
