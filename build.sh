@@ -2,13 +2,13 @@
 
 echo "###########################################################"
 cd src &&
-echo "Compiling ants.c"
-cc -Wall -Wextra -O -c -g -o ants.o ants.c &&
+echo "Compiling ants.o"
+gcc -Wextra -Og -c -g -o ants.o cell.c command.c game.c init.c map.c play.c vector.c world.c &&
 echo "Generating libants.a"
 ar rcs libants.a ants.o &&
-echo "Compiling main.c"
-cc -Wall -Wextra -O -c -g -o main.o main.c &&
+echo "Compiling main.o"
+cc -Wextra -Og -c -g -o main.o main.c &&
 echo "Linking bot program"
-cc -Wall -Wextra -O -g main.o -static -L. -lants -o ../bin/ants.bot -lm &&
+cc -Wextra -Og -g main.o -static -L. -lants -o ../bin/ants.bot -lm &&
 echo "Done"
 echo "###########################################################"
