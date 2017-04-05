@@ -2,9 +2,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "util.h"
-#include "init.h"
 #include "command.h"
+#include "init.h"
+#include "util.h"
 
 static const char delim[] = " \n";
 
@@ -93,8 +93,7 @@ int init(world_t *w) {
   free(line);
 
   // Send 'go' to stdout and flush
-  printf("go\n");
-  fflush(stdout);
+  puts("go\n");
 
   // Debug print
   fprintf(stderr, "Finished initialization\n");

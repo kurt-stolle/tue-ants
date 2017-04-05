@@ -6,19 +6,25 @@
 #include <string.h>
 #include "ants.h"
 
+// World information
+static world_t* world;
 
 // Main function
 int main() {
-  // World and game
-  world_t *world = newWorld();
-  game_t *game = newGame();
+  // World and game initialization
+  world = newWorld();
 
   // Initialize and play
   if (init(world)) {
-    while (play(world, game)) {
+    fflush(stdout);
+
+    while (play(world)) {
       // Debug print
       fprintf(stderr, "Finished turn, %d turns passed\n", world->turns);
       printMap(world->map, stderr);
+
+      // fflush stdout
+      fflush(stdout);
     };
   }
 

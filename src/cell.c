@@ -15,8 +15,8 @@ cell_t *newCell() {
 
   return c;
 }
-void clearCell(cell_t* c){
-    c->state = cell_t.stateEmpty;
-    c->content = NULL;
+void clearCell(cell_t *c) {
+  c->state = cell_t.stateEmpty;
+  c->content = NULL;
 }
 void destroyCell(cell_t *c) { free(c); }

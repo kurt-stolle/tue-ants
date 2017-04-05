@@ -2,8 +2,8 @@
 #ifndef PLAY_H
 #define PLAY_H
 
-#include "world.h"
 #include "game.h"
+#include "world.h"
 
 bool init(world_t* w);
-bool play(world_t* w, game_t* g);
+bool play(world_t* w);
