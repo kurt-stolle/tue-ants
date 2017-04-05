@@ -2,11 +2,15 @@
 #ifndef TYPES_H
 #define TYPES_H
 
+#include <stdbool.h>
 #include "vector.h"
+
+// player_t is a player
+typedef struct { unsigned short id : 8; } player_t;
 
 // ant_t is an ant
 typedef struct {
-  int alive;
+  bool alive : 1;
   vec2_t position;
   player_t *owner;
 } ant_t;
@@ -18,12 +22,6 @@ typedef struct {
 } hill_t;
 
 // food_t is food
-typedef struct {
-  vec2_t position;
-  player_t *owner;
-} food_t;
-
-// player_t is a player
-typedef struct { unsigned short id : 8; }
+typedef struct { vec2_t position; } food_t;
 
 #endif

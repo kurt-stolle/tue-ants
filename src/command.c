@@ -1,15 +1,15 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "command.h"
 
+static const char delim[] = " \n";
+
 // Command splitting
 command_t *readCommand(char *cmd) {
-  command_t *res;
-
-  // Allocate memory for the result
-  res = malloc(sizeof(*res));
+  command_t *res = malloc(sizeof(*res));
   res->argsLen = 0;
   res->cmd = NULL;
   res->args = NULL;

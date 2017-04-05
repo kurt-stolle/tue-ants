@@ -2,6 +2,7 @@
 #define WORLD_H
 
 #include "map.h"
+#include "types.h"
 
 // world_t holds general information about the game
 typedef struct {
@@ -31,9 +32,17 @@ typedef struct {
 // world_t methods
 world_t *newWorld();
 void destroyWorld(world_t *w);
+
 void addPlayer(world_t *w, player_t *p);
 void addHill(world_t *w, hill_t *h);
 void addAnt(world_t *w, ant_t *a);
 void addFood(world_t *w, food_t *f);
+
+void removePlayer(world_t *w, player_t *p);
+void removeHill(world_t *w, hill_t *h);
+void removeAnt(world_t *w, ant_t *a);
+void removeFood(world_t *w, food_t *f);
+
+void clearCell(world_t *w, cell_t *c);
 
 #endif

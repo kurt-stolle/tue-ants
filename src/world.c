@@ -89,8 +89,8 @@ void addHill(world_t *w, hill_t *h) {
 
   // Add to the map
   cell_t *c = w->map->cells[h->position.x][h->position.y];
-  c.state = stateHill;
-  c.content.hill = h;
+  c->state = stateHill;
+  c->content.hill = h;
 }
 
 // Add an ant
@@ -104,8 +104,8 @@ void addAnt(world_t *w, ant_t *a) {
 
   // Add to the map
   cell_t *c = w->map->cells[a->position.x][a->position.y];
-  c.state = stateAnt;
-  c.content.ant = a;
+  c->state = stateAnt;
+  c->content.ant = a;
 }
 
 // Add a food
@@ -119,6 +119,137 @@ void addFood(world_t *w, food_t *f) {
 
   // Add to the map
   cell_t *c = w->map->cells[f->position.x][f->position.y];
-  c.state = stateFood;
-  c.content.food = f;
+  c->state = stateFood;
+  c->content.food = f;
+}
+
+// Remove a player
+void removePlayer(world_t *w, player_t *p) {
+  for (unsigned int i = 0; i < w->playerCount; i++) {
+    if (w->players[i] == p) {
+      if (w->playerCount > 1) {
+        // Move all future entries one back
+        for (; i < (unsigned int)(w->playerCount - 1); i++) {
+          w->players[i] = w->players[i + 1];
+        }
+      }
+
+      // Reallocate the array
+      w->playerCount--;
+      w->players = realloc(w->players, w->playerCount * sizeof(*w->players));
+
+      // Free memory
+      free(p);
+
+      // Stop the loop
+      break;
+    }
+  }
+}
+
+// Remove a hill
+void removeHill(world_t *w, hill_t *h) {
+  for (unsigned int i = 0; i < w->hillCount; i++) {
+    if (w->hills[i] == h) {
+      if (w->hillCount > 1) {
+        // Move all future entries one back
+        for (; i < (unsigned int)(w->hillCount - 1); i++) {
+          w->hills[i] = w->hills[i + 1];
+        }
+      }
+
+      // Reallocate the array
+      w->hillCount--;
+      w->hills = realloc(w->hills, w->hillCount * sizeof(*w->hills));
+
+      // Free memory
+      free(h);
+
+      // Stop the loop
+      break;
+    }
+  }
+
+  // Clear cell
+  cell_t *cell = w->map->cells[h->position.x][h->position.y];
+  cell->state = stateEmpty;
+  cell->content.ant = NULL;
+}
+
+// Remove an ant
+void removeAnt(world_t *w, ant_t *a) {
+  for (unsigned int i = 0; i < w->antCount; i++) {
+    if (w->ants[i] == a) {
+      if (w->antCount > 1) {
+        // Move all future entries one back
+        for (; i < (unsigned int)(w->antCount - 1); i++) {
+          w->ants[i] = w->ants[i + 1];
+        }
+      }
+
+      // Reallocate the array
+      w->antCount--;
+      w->ants = realloc(w->ants, w->antCount * sizeof(*w->ants));
+
+      // Free memory
+      free(a);
+
+      // Stop the loop
+      break;
+    }
+  }
+
+  // Clear cell
+  cell_t *cell = w->map->cells[a->position.x][a->position.y];
+  cell->state = stateEmpty;
+  cell->content.ant = NULL;
+}
+
+// Remove a food
+void removeFood(world_t *w, food_t *f) {
+  for (unsigned int i = 0; i < w->foodCount; i++) {
+    if (w->foods[i] == f) {
+      if (w->foodCount > 1) {
+        // Move all future entries one back
+        for (; i < (unsigned int)(w->foodCount - 1); i++) {
+          w->foods[i] = w->foods[i + 1];
+        }
+      }
+
+      // Reallocate the array
+      w->foodCount--;
+      w->foods = realloc(w->foods, w->foodCount * sizeof(*w->foods));
+
+      // Free memory
+      free(f);
+
+      // Stop the loop
+      break;
+    }
+  }
+
+  // Clear cell
+  cell_t *cell = w->map->cells[f->position.x][f->position.y];
+  cell->state = stateEmpty;
+  cell->content.ant = NULL;
+}
+
+// Clear a cell
+void clearCell(world_t *w, cell_t *c) {
+  // How we clear the cell depends on what's in it. Some types of cells must be
+  // cleared from the world entirely.
+  switch (c->state) {
+    case stateAnt:
+      removeAnt(w, c->content.ant);
+      break;
+    case stateHill:
+      removeHill(w, c->content.hill);
+      break;
+    case stateFood:
+      removeFood(w, c->content.food);
+      break;
+    default:
+      c->state = stateEmpty;
+      c->content.ant = NULL;
+  }
 }

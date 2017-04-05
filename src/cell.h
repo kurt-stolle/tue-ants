@@ -1,6 +1,8 @@
 #ifndef CELL_H
 #define CELL_H
 
+#include "types.h"
+
 // cell_t is a cell
 typedef struct {
   enum {
@@ -23,7 +25,6 @@ typedef struct {
 
 // cell_t methods
 cell_t* newCell();
-void clearCell(cell_t* c);
 void destroyCell(cell_t* c);
 
 #endif

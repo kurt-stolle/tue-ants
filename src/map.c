@@ -1,5 +1,7 @@
-#include "map.h"
+#include <stdio.h>
+#include <stdlib.h>
 
+#include "map.h"
 
 // Map methods
 map_t *newMap(unsigned int w, unsigned int h) {
@@ -32,7 +34,25 @@ void printMap(map_t *m, FILE *out) {
     for (y = 0; y < m->height; y++) {
       cell = m->cells[x][y];
 
-      fputc(cell->state, out);
+      switch (cell->state) {
+        case stateEmpty:
+          fputc('*', out);
+          break;
+        case stateWater:
+          fputc('*', out);
+          break;
+        case stateAnt:
+          fputc('*', out);
+          break;
+        case stateHill:
+          fputc('*', out);
+          break;
+        case stateFood:
+          fputc('*', out);
+          break;
+        default:
+          fputc('?', out);
+      }
     }
     fputc('\n', out);
   }

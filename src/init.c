@@ -6,10 +6,8 @@
 #include "init.h"
 #include "util.h"
 
-static const char delim[] = " \n";
-
 // Initialization function
-int init(world_t *w) {
+bool init(world_t *w) {
   char *line = NULL;
   size_t len = 0;
   command_t *split;
