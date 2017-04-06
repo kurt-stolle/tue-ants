@@ -8,8 +8,24 @@
 #include "util.h"
 #include "world.h"
 
+// Directions that our ant may move towards
+typedef enum {
+  dirNorth = 'N',
+  dirSouth = 'S',
+  dirWest = 'W',
+  dirEast = 'E'
+} direction_t;
+
+// Order builds a packet to order an ant that we own to move in a certain
+// direction
+void order(ant_t *ant, direction_t dir) {
+  printf("o %d %d %c\n", ant->position.x, ant->position.y, dir);
+}
+
 // Play function. Plays the ants game
 bool play(world_t *w) {
+  unsigned int i;
+
   // Game ended flag
   bool end = false;
 
@@ -18,29 +34,24 @@ bool play(world_t *w) {
   size_t len = 0;     // Length of the line read
   command_t *split;   // Split command
 
-  // When reading commands, we'll occupy one of these, but never multiple
-  // Optimize memory by using a union
-  union itemUnion {
-    ant_t *ant;
-    hill_t *hill;
-    food_t *food;
-  } itemptr;
+  // Generics
+  ant_t *ant;
+  hill_t *hill;
+  food_t *food;
+  cell_t *cell;
 
   // Clean the map around our viewradius
   // Because we're about to receive new information about it
   // We need to perform a circle iteration at each ant we own
-  ant_t *ant;
-  long maxRadius = (long)sqrt(w->viewRadius2);
+  long maxRadius = (long)ceil(sqrt(w->viewRadius2));
 
   // Iterate over all ants
   fputs("Searching for our own ants\n", stderr);
-  for (unsigned int i = 0; i < w->antCount; i++) {
+  for (i = 0; i < w->antCount; i++) {
     ant = w->ants[i];
 
     if (ant->owner == w->localPlayer) {
-      fputs("Found an ant, scanning area\n", stderr);
       // This ant is owned by us
-      cell_t *cell;
       long x, y;
       long xNul, yNul;
       long xRel, yRel;
@@ -103,11 +114,11 @@ bool play(world_t *w) {
       w->turns = strToInt(split->args[0]);
     } else if (strEqual(split->cmd, "f") && split->argsLen == 2) {
       // Food at (x,y)
-      itemptr.food = (food_t *)malloc(sizeof(food_t));
-      itemptr.food->position.x = strToInt(split->args[0]);
-      itemptr.food->position.y = strToInt(split->args[1]);
+      food = (food_t *)malloc(sizeof(food_t));
+      food->position.x = strToInt(split->args[0]);
+      food->position.y = strToInt(split->args[1]);
 
-      addFood(w, itemptr.food);
+      addFood(w, food);
     } else if (strEqual(split->cmd, "w") && split->argsLen == 2) {
       // Water at(x,y)
 
@@ -117,30 +128,30 @@ bool play(world_t *w) {
       c->state = stateWater;
     } else if (strEqual(split->cmd, "a") && split->argsLen == 3) {
       // Ant at(x,y) owned by (owner)
-      itemptr.ant = (ant_t *)malloc(sizeof(ant_t));
-      itemptr.ant->position.x = strToInt(split->args[0]);
-      itemptr.ant->position.y = strToInt(split->args[1]);
-      itemptr.ant->alive = true;
-      itemptr.ant->owner = (uint8_t)strToInt(split->args[2]);
+      ant = (ant_t *)malloc(sizeof(ant_t));
+      ant->position.x = strToInt(split->args[0]);
+      ant->position.y = strToInt(split->args[1]);
+      ant->alive = true;
+      ant->owner = (uint8_t)strToInt(split->args[2]);
 
-      addAnt(w, itemptr.ant);
+      addAnt(w, ant);
     } else if (strEqual(split->cmd, "d") && split->argsLen == 3) {
       // Dead ant at(x,y) owned by (owner)
-      itemptr.ant = (ant_t *)malloc(sizeof(ant_t));
-      itemptr.ant->position.x = strToInt(split->args[0]);
-      itemptr.ant->position.y = strToInt(split->args[1]);
-      itemptr.ant->alive = false;
-      itemptr.ant->owner = (uint8_t)strToInt(split->args[2]);
+      ant = (ant_t *)malloc(sizeof(ant_t));
+      ant->position.x = strToInt(split->args[0]);
+      ant->position.y = strToInt(split->args[1]);
+      ant->alive = false;
+      ant->owner = (uint8_t)strToInt(split->args[2]);
 
-      addAnt(w, itemptr.ant);
+      addAnt(w, ant);
     } else if (strEqual(split->cmd, "h") && split->argsLen == 3) {
       // Anthill at (x,y) owned by (owner OR 0)
-      itemptr.hill = (hill_t *)malloc(sizeof(hill_t));
-      itemptr.hill->position.x = strToInt(split->args[0]);
-      itemptr.hill->position.y = strToInt(split->args[1]);
-      itemptr.hill->owner = (uint8_t)strToInt(split->args[2]);
+      hill = (hill_t *)malloc(sizeof(hill_t));
+      hill->position.x = strToInt(split->args[0]);
+      hill->position.y = strToInt(split->args[1]);
+      hill->owner = (uint8_t)strToInt(split->args[2]);
 
-      addHill(w, itemptr.hill);
+      addHill(w, hill);
     } else {
       fprintf(stderr, "Unknown command: '%s'\n", split->cmd);
     }
@@ -152,6 +163,25 @@ bool play(world_t *w) {
   // Perform our own turn
   if (!end) {
     fputs("Playing our turn\n", stderr);
+
+    // Figure the general direction to the nearest food item or anthill
+    // We need food to spawn new ants
+    // Search for the nearest food, so that we can move towards it
+    fputs("Searching for food\n", stderr);
+    for (i = 0; i < w->foodCount; i++) {
+      food = w->foods[i];
+    }
+
+    // Control the ants
+    for (i = 0; i < w->antCount; i++) {
+      ant = w->ants[i];
+
+      if (ant->owner != 0) {
+        continue;
+      }
+
+      order(w->ants[i], dirWest);
+    }
 
     // TODO
     puts("go\n");
