@@ -20,7 +20,7 @@ bool play(world_t *w) {
 
   // When reading commands, we'll occupy one of these, but never multiple
   // Optimize memory by using a union
-  union {
+  union itemUnion {
     ant_t *ant;
     hill_t *hill;
     food_t *food;
@@ -151,10 +151,9 @@ bool play(world_t *w) {
 
   // Perform our own turn
   if (!end) {
-    fputs("Playing our turn", stderr);
+    fputs("Playing our turn\n", stderr);
 
     // TODO
-
     puts("go\n");
   }
 

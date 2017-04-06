@@ -24,7 +24,7 @@ void startGame() {
       // Debug print
       fprintf(stderr, "Finished turn, %d turns passed\n", world->turns);
       printMap(world->map, stderr);
-
+      fputc('\n', stderr);
       // fflush stdout
       fflush(stdout);
     };

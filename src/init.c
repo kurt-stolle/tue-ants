@@ -30,12 +30,12 @@ bool init(world_t *w) {
     // Switch by command
     if (strEqual(split->cmd, "ready")) {
       break;
-    } else if (strEqual(split->cmd, "rows") && split->argsLen == 1) {
+    } else if (strEqual(split->cmd, "cols") && split->argsLen == 1) {
       readvar = (unsigned int)strToInt(split->args[0]);
       height = readvar;
 
       fprintf(stderr, "- map height: %d\n", readvar);
-    } else if (strEqual(split->cmd, "cols") && split->argsLen == 1) {
+    } else if (strEqual(split->cmd, "rows") && split->argsLen == 1) {
       readvar = (unsigned int)strToInt(split->args[0]);
       width = readvar;
 
