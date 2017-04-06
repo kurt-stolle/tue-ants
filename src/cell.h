@@ -6,17 +6,20 @@
 // cell_t is a cell
 typedef struct {
   enum {
-    stateEmpty,
+    stateUnknown,
+    stateLand,
+    stateWater,
     stateAnt,
     stateHill,
-    stateFood,
-    stateWater
+    stateAntOnHill,
+    stateFood
   } state;  // State of the cell
 
   union {
     ant_t* ant;
     hill_t* hill;
     food_t* food;
+    void* empty;
   } content;
 
   unsigned short lastSeen;  // Turn in which this cell was last seen. Can be

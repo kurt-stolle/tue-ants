@@ -35,17 +35,20 @@ void printMap(map_t *m, FILE *out) {
       cell = m->cells[x][y];
 
       switch (cell->state) {
-        case stateEmpty:
-          fputc('*', out);
+        case stateLand:
+          fputc('.', out);
           break;
         case stateWater:
-          fputc('*', out);
+          fputc('%', out);
           break;
         case stateAnt:
-          fputc('*', out);
+          fputc((char)(65 + cell->content.ant->owner), out);
           break;
         case stateHill:
-          fputc('*', out);
+          fputc((char)(48 + cell->content.ant->owner), out);
+          break;
+        case stateAntOnHill:
+          fputc((char)(97 + cell->content.ant->owner), out);
           break;
         case stateFood:
           fputc('*', out);
@@ -70,4 +73,26 @@ void destroyMap(map_t *m) {
   }
   free(m->cells);
   free(m);
+}
+
+cell_t *getCellAt(map_t *m, long x, long y) {
+  // Wrapping for sides
+  if (x < 0) {
+    while (x < 0) {
+      x = m->width + x;
+    }
+  } else {
+    x = x % m->width;
+  }
+
+  if (y < 0) {
+    while (y < 0) {
+      y = m->height + y;
+    }
+  } else {
+    y = y % m->height;
+  }
+
+  // Return cell at coord
+  return m->cells[x][y];
 }

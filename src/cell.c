@@ -10,15 +10,11 @@ cell_t *newCell() {
 
   // Allocate cell
   c = malloc(sizeof(*c));
-  c->state = stateEmpty;
+  c->state = stateUnknown;
   c->lastSeen = 0;
+  c->content.empty = NULL;
 
   return c;
 }
 
-void destroyCell(cell_t *c) {
-  if (c->content.ant) {
-    fputs("Removed cell without clearing contents first", stderr);
-  }
-  free(c);
-}
+void destroyCell(cell_t *c) { free(c); }

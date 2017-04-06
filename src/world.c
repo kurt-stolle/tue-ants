@@ -22,14 +22,12 @@ world_t *newWorld() {
 
   w->map = NULL;
 
-  w->localPlayer = NULL;
+  w->localPlayer = 0;
 
-  w->playerCount = 0;
   w->hillCount = 0;
   w->antCount = 0;
   w->foodCount = 0;
 
-  w->players = NULL;
   w->hills = NULL;
   w->ants = NULL;
   w->foods = NULL;
@@ -46,9 +44,7 @@ void destroyWorld(world_t *w) {
 
   // Arrays
   unsigned int i;
-  for (i = 0; i < w->playerCount; i++) {
-    free(w->players[i]);
-  }
+
   for (i = 0; i < w->hillCount; i++) {
     free(w->hills[i]);
   }
@@ -59,23 +55,12 @@ void destroyWorld(world_t *w) {
     free(w->foods[i]);
   }
 
-  free(w->players);
   free(w->hills);
   free(w->ants);
   free(w->foods);
 
   // World
   free(w);
-}
-
-// Add a player
-void addPlayer(world_t *w, player_t *p) {
-  // Increment counter and (re)allocate array
-  w->playerCount++;
-  w->players = realloc(w->players, w->playerCount * sizeof(*w->players));
-
-  // Add a new entry at the end of the array
-  w->players[w->playerCount - 1] = p;
 }
 
 // Add a hill
@@ -89,8 +74,13 @@ void addHill(world_t *w, hill_t *h) {
 
   // Add to the map
   cell_t *c = w->map->cells[h->position.x][h->position.y];
-  c->state = stateHill;
-  c->content.hill = h;
+
+  if (c->state == stateAnt) {
+    c->state = stateAntOnHill;
+  } else {
+    c->state = stateHill;
+    c->content.hill = h;
+  }
 }
 
 // Add an ant
@@ -104,7 +94,13 @@ void addAnt(world_t *w, ant_t *a) {
 
   // Add to the map
   cell_t *c = w->map->cells[a->position.x][a->position.y];
-  c->state = stateAnt;
+
+  if (c->state == stateHill) {
+    c->state = stateAntOnHill;
+  } else {
+    c->state = stateAnt;
+  }
+
   c->content.ant = a;
 }
 
@@ -121,30 +117,6 @@ void addFood(world_t *w, food_t *f) {
   cell_t *c = w->map->cells[f->position.x][f->position.y];
   c->state = stateFood;
   c->content.food = f;
-}
-
-// Remove a player
-void removePlayer(world_t *w, player_t *p) {
-  for (unsigned int i = 0; i < w->playerCount; i++) {
-    if (w->players[i] == p) {
-      if (w->playerCount > 1) {
-        // Move all future entries one back
-        for (; i < (unsigned int)(w->playerCount - 1); i++) {
-          w->players[i] = w->players[i + 1];
-        }
-      }
-
-      // Reallocate the array
-      w->playerCount--;
-      w->players = realloc(w->players, w->playerCount * sizeof(*w->players));
-
-      // Free memory
-      free(p);
-
-      // Stop the loop
-      break;
-    }
-  }
 }
 
 // Remove a hill
@@ -172,13 +144,20 @@ void removeHill(world_t *w, hill_t *h) {
 
   // Clear cell
   cell_t *cell = w->map->cells[h->position.x][h->position.y];
-  cell->state = stateEmpty;
-  cell->content.ant = NULL;
+
+  if (cell->state == stateAntOnHill) {
+    cell->state = stateAnt;
+  } else {
+    cell->content.empty = NULL;
+    cell->state = stateLand;
+  }
 }
 
 // Remove an ant
 void removeAnt(world_t *w, ant_t *a) {
-  for (unsigned int i = 0; i < w->antCount; i++) {
+  unsigned int i;
+
+  for (i = 0; i < w->antCount; i++) {
     if (w->ants[i] == a) {
       if (w->antCount > 1) {
         // Move all future entries one back
@@ -201,8 +180,25 @@ void removeAnt(world_t *w, ant_t *a) {
 
   // Clear cell
   cell_t *cell = w->map->cells[a->position.x][a->position.y];
-  cell->state = stateEmpty;
-  cell->content.ant = NULL;
+
+  if (cell->state == stateAntOnHill) {
+    hill_t *hill;
+
+    for (i = 0; i < w->hillCount; i++) {
+      hill = w->hills[i];
+
+      if (hill->position.x == a->position.x &&
+          hill->position.x == a->position.y) {
+        cell->content.hill = hill;
+        break;
+      }
+    }
+
+    cell->state = stateHill;
+  } else {
+    cell->content.empty = NULL;
+    cell->state = stateLand;
+  }
 }
 
 // Remove a food
@@ -230,26 +226,6 @@ void removeFood(world_t *w, food_t *f) {
 
   // Clear cell
   cell_t *cell = w->map->cells[f->position.x][f->position.y];
-  cell->state = stateEmpty;
-  cell->content.ant = NULL;
-}
-
-// Clear a cell
-void clearCell(world_t *w, cell_t *c) {
-  // How we clear the cell depends on what's in it. Some types of cells must be
-  // cleared from the world entirely.
-  switch (c->state) {
-    case stateAnt:
-      removeAnt(w, c->content.ant);
-      break;
-    case stateHill:
-      removeHill(w, c->content.hill);
-      break;
-    case stateFood:
-      removeFood(w, c->content.food);
-      break;
-    default:
-      c->state = stateEmpty;
-      c->content.ant = NULL;
-  }
+  cell->content.empty = NULL;
+  cell->state = stateLand;
 }

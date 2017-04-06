@@ -84,8 +84,9 @@ bool init(world_t *w) {
   }
 
   // Set remaining values
-  fprintf(stderr, "Allocating map");
+  fprintf(stderr, "Allocating map\n");
   w->map = newMap(width, height);
+  w->localPlayer = 0;
 
   // Dealloc line
   free(line);

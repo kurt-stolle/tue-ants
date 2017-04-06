@@ -1,3 +1,4 @@
+#include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,16 +29,57 @@ bool play(world_t *w) {
   // Clean the map around our viewradius
   // Because we're about to receive new information about it
   // We need to perform a circle iteration at each ant we own
-  // TODO - for now just clear the whole map
-  fputs("Reloading map\n", stderr);
+  ant_t *ant;
+  long maxRadius = (long)sqrt(w->viewRadius2);
 
-  unsigned int x;
-  unsigned int y;
-  for (x = 0; x < w->map->width; x++) {
-    for (y = 0; y < w->map->height; y++) {
-      clearCell(w, w->map->cells[x][y]);
+  // Iterate over all ants
+  fputs("Searching for our own ants\n", stderr);
+  for (unsigned int i = 0; i < w->antCount; i++) {
+    ant = w->ants[i];
+
+    if (ant->owner == w->localPlayer) {
+      fputs("Found an ant, scanning area\n", stderr);
+      // This ant is owned by us
+      cell_t *cell;
+      long x, y;
+      long xNul, yNul;
+      long xRel, yRel;
+
+      xNul = (long)ant->position.x;
+      yNul = (long)ant->position.y;
+
+      for (x = xNul - maxRadius; x <= (xNul + maxRadius); x++) {
+        for (y = yNul - maxRadius; y <= (yNul + maxRadius); y++) {
+          xRel = x - xNul;
+          yRel = y - yNul;
+
+          // Check whether this cell is within this ant's viewradius
+          if ((xRel == 0 && yRel == 0) ||
+              (xRel * xRel) + (yRel * yRel) > w->viewRadius2) {
+            continue;
+          }
+
+          cell = getCellAt(w->map, x, y);
+          switch (cell->state) {
+            case stateAnt:
+              removeAnt(w, cell->content.ant);
+              break;
+            case stateAntOnHill:
+              removeAnt(w, cell->content.ant);
+              break;
+            case stateFood:
+              removeFood(w, cell->content.food);
+              break;
+            case stateUnknown:
+              cell->state = stateLand;
+              break;
+          }
+          cell->lastSeen = w->turns + 1;
+        }
+      }
     }
   }
+
   // Read information
   fputs("Reading turn information\n", stderr);
   while (getline(&line, &len, stdin) != 0) {
@@ -78,7 +120,17 @@ bool play(world_t *w) {
       itemptr.ant = (ant_t *)malloc(sizeof(ant_t));
       itemptr.ant->position.x = strToInt(split->args[0]);
       itemptr.ant->position.y = strToInt(split->args[1]);
-      // itemptr.ant->owner = strToInt(split->args[2]);
+      itemptr.ant->alive = true;
+      itemptr.ant->owner = (uint8_t)strToInt(split->args[2]);
+
+      addAnt(w, itemptr.ant);
+    } else if (strEqual(split->cmd, "d") && split->argsLen == 3) {
+      // Dead ant at(x,y) owned by (owner)
+      itemptr.ant = (ant_t *)malloc(sizeof(ant_t));
+      itemptr.ant->position.x = strToInt(split->args[0]);
+      itemptr.ant->position.y = strToInt(split->args[1]);
+      itemptr.ant->alive = false;
+      itemptr.ant->owner = (uint8_t)strToInt(split->args[2]);
 
       addAnt(w, itemptr.ant);
     } else if (strEqual(split->cmd, "h") && split->argsLen == 3) {
@@ -86,7 +138,7 @@ bool play(world_t *w) {
       itemptr.hill = (hill_t *)malloc(sizeof(hill_t));
       itemptr.hill->position.x = strToInt(split->args[0]);
       itemptr.hill->position.y = strToInt(split->args[1]);
-      // itemptr.hill->owner = strToInt(split->args[2]);
+      itemptr.hill->owner = (uint8_t)strToInt(split->args[2]);
 
       addHill(w, itemptr.hill);
     } else {

@@ -16,14 +16,12 @@ typedef struct {
   unsigned int loadTime;
   unsigned int turnTime;
 
-  player_t *localPlayer;
+  uint8_t localPlayer;
 
-  unsigned short playerCount;
   unsigned short hillCount;
   unsigned short foodCount;
   unsigned int antCount;
 
-  player_t **players;
   ant_t **ants;
   hill_t **hills;
   food_t **foods;
@@ -33,16 +31,12 @@ typedef struct {
 world_t *newWorld();
 void destroyWorld(world_t *w);
 
-void addPlayer(world_t *w, player_t *p);
 void addHill(world_t *w, hill_t *h);
 void addAnt(world_t *w, ant_t *a);
 void addFood(world_t *w, food_t *f);
 
-void removePlayer(world_t *w, player_t *p);
 void removeHill(world_t *w, hill_t *h);
 void removeAnt(world_t *w, ant_t *a);
 void removeFood(world_t *w, food_t *f);
-
-void clearCell(world_t *w, cell_t *c);
 
 #endif
