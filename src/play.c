@@ -8,18 +8,11 @@
 #include "util.h"
 #include "world.h"
 
-// Directions that our ant may move towards
-typedef enum {
-  dirNorth = 'N',
-  dirSouth = 'S',
-  dirWest = 'W',
-  dirEast = 'E'
-} direction_t;
-
 // Order builds a packet to order an ant that we own to move in a certain
 // direction
-void order(ant_t *ant, direction_t dir) {
+static inline void order(ant_t *ant, direction_t dir) {
   printf("o %d %d %c\n", ant->position.x, ant->position.y, dir);
+  fprintf(stderr, "Out: %d %d %c\n", ant->position.x, ant->position.y, dir);
 }
 
 // Play function. Plays the ants game
@@ -40,64 +33,58 @@ bool play(world_t *w) {
   food_t *food;
   cell_t *cell;
 
-  // Clean the map around our viewradius
-  // Because we're about to receive new information about it
-  // We need to perform a circle iteration at each ant we own
-  long maxRadius = (long)ceil(sqrt(w->viewRadius2));
+  // Clear the map
+  if (w->ants) {
+    for (i = 0; i < w->antCount; i++) {
+      ant = w->ants[i];
 
-  // Iterate over all ants
-  fputs("Searching for our own ants\n", stderr);
-  for (i = 0; i < w->antCount; i++) {
-    ant = w->ants[i];
+      cell = w->map->cells[ant->position.x][ant->position.y];
+      cell->content.empty = NULL;
+      cell->state = stateLand;
 
-    if (ant->owner == w->localPlayer) {
-      // This ant is owned by us
-      long x, y;
-      long xNul, yNul;
-      long xRel, yRel;
-
-      xNul = (long)ant->position.x;
-      yNul = (long)ant->position.y;
-
-      for (x = xNul - maxRadius; x <= (xNul + maxRadius); x++) {
-        for (y = yNul - maxRadius; y <= (yNul + maxRadius); y++) {
-          xRel = x - xNul;
-          yRel = y - yNul;
-
-          // Check whether this cell is within this ant's viewradius
-          if ((xRel == 0 && yRel == 0) ||
-              (xRel * xRel) + (yRel * yRel) > w->viewRadius2) {
-            continue;
-          }
-
-          cell = getCellAt(w->map, x, y);
-          switch (cell->state) {
-            case stateAnt:
-              removeAnt(w, cell->content.ant);
-              break;
-            case stateAntOnHill:
-              removeAnt(w, cell->content.ant);
-              break;
-            case stateFood:
-              removeFood(w, cell->content.food);
-              break;
-            case stateUnknown:
-              cell->state = stateLand;
-              break;
-          }
-          cell->lastSeen = w->turns + 1;
-        }
-      }
+      free(ant);
     }
+    free(w->ants);
+    w->antCount = 0;
   }
 
-  // Read information
+  if (w->foods) {
+    for (i = 0; i < w->foodCount; i++) {
+      food = w->foods[i];
+
+      cell = w->map->cells[food->position.x][food->position.y];
+      cell->content.empty = NULL;
+      cell->state = stateLand;
+
+      free(food);
+    }
+    free(w->foods);
+    w->foodCount = 0;
+  }
+
+  if (w->hills) {
+    for (i = 0; i < w->hillCount; i++) {
+      hill = w->hills[i];
+
+      cell = w->map->cells[hill->position.x][hill->position.y];
+      cell->content.empty = NULL;
+      cell->state = stateLand;
+
+      free(hill);
+    }
+    free(w->hills);
+    w->hillCount = 0;
+  }
+
+  // Read the current state of the world
   fputs("Reading turn information\n", stderr);
   while (getline(&line, &len, stdin) != 0) {
     // Skip empty lines
     if (strEqual(line, "\n")) {
       continue;
     }
+
+    fprintf(stderr, "In: %s", line);
 
     // Fetch the command
     split = readCommand(line);
@@ -109,6 +96,7 @@ bool play(world_t *w) {
     } else if (strEqual(split->cmd, "end")) {
       // End game
       end = true;
+      break;
     } else if (strEqual(split->cmd, "turn") && split->argsLen == 1) {
       // Current turn
       w->turns = strToInt(split->args[0]);
@@ -132,18 +120,13 @@ bool play(world_t *w) {
       ant->position.x = strToInt(split->args[0]);
       ant->position.y = strToInt(split->args[1]);
       ant->alive = true;
+      ant->task = taskIdle;
       ant->owner = (uint8_t)strToInt(split->args[2]);
 
       addAnt(w, ant);
     } else if (strEqual(split->cmd, "d") && split->argsLen == 3) {
       // Dead ant at(x,y) owned by (owner)
-      ant = (ant_t *)malloc(sizeof(ant_t));
-      ant->position.x = strToInt(split->args[0]);
-      ant->position.y = strToInt(split->args[1]);
-      ant->alive = false;
-      ant->owner = (uint8_t)strToInt(split->args[2]);
-
-      addAnt(w, ant);
+      // We don't care about this
     } else if (strEqual(split->cmd, "h") && split->argsLen == 3) {
       // Anthill at (x,y) owned by (owner OR 0)
       hill = (hill_t *)malloc(sizeof(hill_t));
@@ -167,20 +150,74 @@ bool play(world_t *w) {
     // Figure the general direction to the nearest food item or anthill
     // We need food to spawn new ants
     // Search for the nearest food, so that we can move towards it
-    fputs("Searching for food\n", stderr);
-    for (i = 0; i < w->foodCount; i++) {
-      food = w->foods[i];
-    }
-
     // Control the ants
     for (i = 0; i < w->antCount; i++) {
       ant = w->ants[i];
 
-      if (ant->owner != 0) {
+      if (!ant->alive || ant->owner != 0) {
         continue;
       }
 
-      order(w->ants[i], dirWest);
+      fprintf(stderr, "Computing move of ant %d\n", i);
+
+      // Reset the task
+      ant->task = taskExplore;
+
+      // Values for looking around us
+      long x, y;
+      long xNul, yNul;
+      long xRel, yRel;
+
+      xNul = (long)ant->position.x;
+      yNul = (long)ant->position.y;
+
+      // Scan our surroundings
+      for (x = xNul - w->viewRadius; x <= (xNul + w->viewRadius); x++) {
+        for (y = yNul - w->viewRadius; y <= (yNul + w->viewRadius); y++) {
+          xRel = x - xNul;
+          yRel = y - yNul;
+
+          // Check whether this cell is within this ant's viewradius
+          if ((xRel == 0 && yRel == 0) ||
+              (xRel * xRel) + (yRel * yRel) > w->viewRadius) {
+            continue;
+          }
+
+          cell = getCellAt(w->map, x, y);
+          switch (cell->state) {
+            case stateAnt:
+
+              break;
+            case stateAntOnHill:
+
+              break;
+            case stateFood:
+              fputs("Food is in radius. Immediately move towards it\n", stderr);
+
+              break;
+            case stateUnknown:
+              // If we see something unknown, assume it's land
+              cell->state = stateLand;
+              break;
+          }
+          cell->lastSeen = w->turns + 1;
+        }
+      }
+
+      // If we've got nothing from our viewradius, then start exploring
+      fputs("Nothing to do. Start exploring\n", stderr);
+      if (getCellAt(w->map, xNul - 1, yNul)->state != stateWater) {
+        order(ant, dirNorth);
+      } else if (getCellAt(w->map, xNul, yNul + 1)->state != stateWater) {
+        order(ant, dirEast);
+      } else if (getCellAt(w->map, xNul + 1, yNul)->state != stateWater) {
+        order(ant, dirSouth);
+      } else if (getCellAt(w->map, xNul, yNul - 1)->state != stateWater) {
+        order(ant, dirWest);
+
+      } else {
+        fputs("Ant is stuck\n", stderr);
+      }
     }
 
     // TODO

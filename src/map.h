@@ -1,12 +1,22 @@
 #ifndef MAP_H
 #define MAP_H
 
+#include <stdio.h>
+
 #include "cell.h"
+
+// direction_t is any direction we want to move towards
+typedef enum {
+  dirNorth = 'N',
+  dirSouth = 'S',
+  dirWest = 'W',
+  dirEast = 'E'
+} direction_t;
 
 // map_t is the worldmap
 typedef struct {
-  unsigned int width;
-  unsigned int height;
+  uint16_t width : 16;
+  uint16_t height : 16;
   cell_t ***cells;
 } map_t;
 

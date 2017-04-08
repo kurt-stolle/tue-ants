@@ -13,9 +13,9 @@ map_t *newMap(unsigned int w, unsigned int h) {
   m->height = h;
   m->cells = malloc(w * sizeof(*(m->cells)));
 
-  for (x = 0; x < w; x++) {
-    m->cells[x] = malloc(h * sizeof(*(m->cells[x])));
-    for (y = 0; y < h; y++) {
+  for (x = 0; x < h; x++) {
+    m->cells[x] = malloc(w * sizeof(*(m->cells[x])));
+    for (y = 0; y < w; y++) {
       m->cells[x][y] = newCell();
     }
   }
@@ -27,11 +27,11 @@ void printMap(map_t *m, FILE *out) {
   unsigned int x, y;
   cell_t *cell;
 
-  fprintf(out, "rows %d\n", m->width);
-  fprintf(out, "cols %d\n", m->height);
-  for (x = 0; x < m->width; x++) {
+  fprintf(out, "rows %d\n", m->height);
+  fprintf(out, "cols %d\n", m->width);
+  for (x = 0; x < m->height; x++) {
     fputs("m ", out);
-    for (y = 0; y < m->height; y++) {
+    for (y = 0; y < m->width; y++) {
       cell = m->cells[x][y];
 
       switch (cell->state) {
@@ -64,9 +64,11 @@ void printMap(map_t *m, FILE *out) {
 void destroyMap(map_t *m) {
   unsigned int x, y;
 
+  fputs("Deallocating map\n", stderr);
+
   // Deallocate cells
-  for (x = 0; x < m->width; x++) {
-    for (y = 0; y < m->height; y++) {
+  for (x = 0; x < m->height; x++) {
+    for (y = 0; y < m->width; y++) {
       destroyCell(m->cells[x][y]);
     }
     free(m->cells[x]);
@@ -79,18 +81,18 @@ cell_t *getCellAt(map_t *m, long x, long y) {
   // Wrapping for sides
   if (x < 0) {
     while (x < 0) {
-      x = m->width + x;
+      x = m->height + x;
     }
   } else {
-    x = x % m->width;
+    x = x % m->height;
   }
 
   if (y < 0) {
     while (y < 0) {
-      y = m->height + y;
+      y = m->width + y;
     }
   } else {
-    y = y % m->height;
+    y = y % m->width;
   }
 
   // Return cell at coord

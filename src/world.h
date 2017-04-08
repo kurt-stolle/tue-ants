@@ -1,6 +1,8 @@
 #ifndef WORLD_H
 #define WORLD_H
 
+#include <stdint.h>
+
 #include "map.h"
 #include "types.h"
 
@@ -8,19 +10,20 @@
 typedef struct {
   map_t *map;  // Pointer to a 2D array
 
-  unsigned short turns;
-  unsigned short viewRadius2;
-  unsigned short attackRadius2;
-  unsigned short spawnRadius2;
-  unsigned int playerSeed;
-  unsigned int loadTime;
-  unsigned int turnTime;
+  uint16_t turns : 16;
+  uint16_t viewRadius2 : 16;
+  uint16_t viewRadius : 16;
+  uint16_t attackRadius2 : 16;
+  uint16_t spawnRadius2 : 16;
+  uint32_t playerSeed : 16;
+  uint32_t loadTime : 16;
+  uint32_t turnTime : 16;
 
-  uint8_t localPlayer;
+  uint8_t localPlayer : 8;
 
-  unsigned short hillCount;
-  unsigned short foodCount;
-  unsigned int antCount;
+  uint32_t hillCount : 32;
+  uint32_t foodCount : 32;
+  uint16_t antCount : 16;
 
   ant_t **ants;
   hill_t **hills;
@@ -34,9 +37,5 @@ void destroyWorld(world_t *w);
 void addHill(world_t *w, hill_t *h);
 void addAnt(world_t *w, ant_t *a);
 void addFood(world_t *w, food_t *f);
-
-void removeHill(world_t *w, hill_t *h);
-void removeAnt(world_t *w, ant_t *a);
-void removeFood(world_t *w, food_t *f);
 
 #endif

@@ -7,10 +7,13 @@
 #include "vector.h"
 
 // ant_t is an ant
-typedef struct {
+typedef struct ant_s {
+  enum { taskIdle = 0, taskExplore = 1, taskGatherFood = 3 } task;
+
   bool alive : 1;
+  vec2_t target;
   vec2_t position;
-  uint8_t owner;
+  uint8_t owner : 8;
 } ant_t;
 
 // hill_t is a hill
