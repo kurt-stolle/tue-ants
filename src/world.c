@@ -46,21 +46,21 @@ void destroyWorld(world_t *w) {
   // Arrays
   unsigned int i;
 
-  if (w->hills) {
+  if (w->hills && w->hillCount > 0) {
     fprintf(stderr, "Deallocating %d hills\n", w->hillCount);
     for (i = 0; i < w->hillCount; i++) {
       free(w->hills[i]);
     }
     free(w->hills);
   }
-  if (w->ants) {
+  if (w->ants && w->antCount > 0) {
     fprintf(stderr, "Deallocating %d ants\n", w->antCount);
     for (i = 0; i < w->antCount; i++) {
       free(w->ants[i]);
     }
     free(w->ants);
   }
-  if (w->foods) {
+  if (w->foods && w->foodCount > 0) {
     fprintf(stderr, "Deallocating %d foods\n", w->foodCount);
     for (i = 0; i < w->foodCount; i++) {
       free(w->foods[i]);

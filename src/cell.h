@@ -22,8 +22,8 @@ typedef struct {
     void* empty;
   } content;
 
-  unsigned int lastSeen;  // Turn in which this cell was last seen. Can be
-                          // useful for strategy
+  uint16_t lastSeen;  // Turn in which this cell was last seen. Can be
+                      // useful for strategy
 } cell_t;
 
 // cell_t methods
