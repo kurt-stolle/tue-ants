@@ -1,6 +1,7 @@
 // This file contains the program's main method, i.e. the starting point of the
 // program
-#include "ants.h"
+#include <stdio.h>
+#include <stdlib.h>
 
 #include "init.h"
 #include "play.h"
